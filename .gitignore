@@ -1,0 +1,8 @@
+# Compiled executables
+main
+demo
+*.exe
+
+# Temporary files
+*.o
+*.out

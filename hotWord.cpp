@@ -70,23 +70,24 @@ public:
             const string &user_dict_path,
             const string &idf_path,
             const string &stop_word_path,
-            long long windowSize)
+            long long windowSize,
+            ostream &out)
         : windowSize(windowSize)
     {
         // 分词模块
         jieba = new cppjieba::Jieba(dict_path, model_path, user_dict_path, idf_path, stop_word_path);
 
         // 加载停用词
-        loadStopWords(stop_word_path);
+        loadStopWords(stop_word_path, out);
     }
 
     // 加载停用词函数
-    void loadStopWords(const string &stopWordsPath)
+    void loadStopWords(const string &stopWordsPath, ostream &out)
     {
         ifstream ifs(stopWordsPath);
         if (!ifs.is_open())
         {
-            cout << "无法打开停用词文件: " << stopWordsPath << endl;
+            out << "无法打开停用词文件: " << stopWordsPath << endl;
             return;
         }
         string line;
@@ -98,7 +99,7 @@ public:
             }
         }
         ifs.close();
-        cout << "停用词加载完成，总共 " << stopWords.size() << " 个停用词。" << endl;
+        out << "停用词加载完成，总共 " << stopWords.size() << " 个停用词。" << endl;
     }
 
     // 处理时间戳函数
@@ -127,15 +128,15 @@ public:
     }
 
     // 处理带时间戳的句子函数
-    string processSentence(const string &sentence)
+    string processSentence(const string &sentence, ostream &out)
     {
         // 获取句子时间戳
         string timestr = sentence.substr(0, sentence.find(']') + 1);
         long long timestamp = Timestamp(timestr);
         if (timestamp == -1)
         {
-            cout << "时间戳格式错误，跳过该句子处理。" << endl;
-            cout << timestr << endl;
+            out << "时间戳格式错误，跳过该句子处理。" << endl;
+            out << timestr << endl;
             return "";
         }
         // 提取句子内容
@@ -172,7 +173,7 @@ public:
     }
 
     // 获取topk热词函数
-    void getTopK(int k)
+    void getTopK(int k, ostream &out)
     {
         // 使用优先队列获取前 k 个热词
         priority_queue<wordCount, vector<wordCount>, cmp> pq;
@@ -181,21 +182,21 @@ public:
             pq.push(wordCount(entry.first, entry.second));
         }
 
-        cout << "当前热词前 " << k << " 名：" << endl;
+        out << "当前热词前 " << k << " 名：" << endl;
         for (int i = 0; i < k && !pq.empty(); i++)
         {
             wordCount wc = pq.top();
             pq.pop();
-            cout << i + 1 << ". " << wc.word << " (出现次数: " << wc.count << ")" << endl;
+            out << i + 1 << ". " << wc.word << " (出现次数: " << wc.count << ")" << endl;
         }
     }
 
     // 统计信息函数
-    void printStats()
+    void printStats(ostream &out)
     {
-        cout << "总处理句子数: " << totalSentences << endl;
-        cout << "总处理词数: " << totalWords << endl;
-        cout << "当前不同词数: " << Counter.size() << endl;
+        out << "总处理句子数: " << totalSentences << endl;
+        out << "总处理词数: " << totalWords << endl;
+        out << "当前不同词数: " << Counter.size() << endl;
     }
 
     ~hotWord()
