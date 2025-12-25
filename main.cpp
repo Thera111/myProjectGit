@@ -39,7 +39,7 @@
 #include <vector>
 #include <cstdlib>
 
-#include "D:\Desktop\myProject\hotWord.cpp"
+#include "hotWord.cpp"
 
 using namespace std;
 
@@ -91,12 +91,21 @@ int main(int argc, char *argv[])
     if (argc >= 3)
         outputFile = argv[2]; // 如果提供参数，更新输出文件路径
 
+    // 打开输出文件
+    std::ofstream outFile(outputFile);
+    if (!outFile.is_open())
+    {
+        std::cerr << "[ERROR] 无法打开输出文件: " << outputFile << std::endl;
+        return EXIT_FAILURE;
+    }
+
     // 从输入文件中读取句子
     std::vector<std::string> lines;
     if (!ReadUtf8Lines(inputFile, lines))
     {
         std::cerr << "[ERROR] 无法打开输入文件: " << inputFile << std::endl;
         std::cerr << "[HINT ] 请创建一个 UTF-8 编码的文件，命名为 '" << inputFile << "'，并写入中文句子。" << std::endl;
+        outFile.close();
         return EXIT_FAILURE;
     }
     if (lines.empty())
@@ -111,7 +120,8 @@ int main(int argc, char *argv[])
         "dict/user.dict.utf8",
         "dict/idf.utf8",
         "dict/stop_words.utf8",
-        600 // 时间窗口大小
+        600, // 时间窗口大小
+        outFile
     );
 
     // 处理每个句子
@@ -124,21 +134,22 @@ int main(int argc, char *argv[])
             if (Kpos != string::npos)
             {
                 int k = stoi(line.substr(Kpos + 2));
-                cout << currTime << "，请求获取前 " << k << " 个热词：" << endl;
+                outFile << currTime << "，请求获取前 " << k << " 个热词：" << endl;
                 // 获取并显示 top k 热词
-                hw.getTopK(k);
+                hw.getTopK(k, outFile);
             }
         }
         else
         {
-            // cout << "处理句子: " << line << endl;
-            currTime = hw.processSentence(line);
+            // outFile << "处理句子: " << line << endl;
+            currTime = hw.processSentence(line, outFile);
         }
     }
 
     // 输出统计信息
-    cout << "================ 统计信息 ================" << endl;
-    hw.printStats();
+    outFile << "================ 统计信息 ================" << endl;
+    hw.printStats(outFile);
 
+    outFile.close();
     return 0;
 }
