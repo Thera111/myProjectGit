@@ -113,6 +113,18 @@ int main(int argc, char *argv[])
         std::cerr << "[WARN ] 输入文件为空。" << std::endl;
     }
 
+    // ========== 配置参数 ==========
+    // 是否启用迟到/乱序数据处理功能
+    // true: 启用乱序处理，适用于数据可能乱序到达的场景
+    // false: 标准模式，假设数据按时间戳顺序到达
+    bool enableLateDataHandling = false;  // 默认关闭，测试时可改为 true
+    
+    // 允许的最大延迟时间（秒）
+    // 只有在 enableLateDataHandling = true 时生效
+    // 建议值：轻度乱序 10-30秒，严重乱序 30-60秒
+    long long allowedLateness = 30;
+    // ===============================
+
     // 初始化hotWord类
     hotWord hw(
         "dict/jieba.dict.utf8",
@@ -120,8 +132,10 @@ int main(int argc, char *argv[])
         "dict/user.dict.utf8",
         "dict/idf.utf8",
         "dict/stop_words.utf8",
-        600, // 时间窗口大小
-        outFile
+        600,                        // 时间窗口大小
+        outFile,
+        enableLateDataHandling,     // 是否启用迟到数据处理
+        allowedLateness             // 允许的最大延迟
     );
 
     // 处理每个句子
