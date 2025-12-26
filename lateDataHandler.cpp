@@ -8,15 +8,16 @@
 
 using namespace std;
 
-// 前向声明 wordEntry（已在 hotWord.cpp 中定义）
-class wordEntry;
+// wordEntry 结构需要在这里完整定义（从 hotWord.cpp 移动到这里）
+// 但为了避免循环依赖，我们在 hotWord.cpp 中定义后再包含此文件
 
 // 时间戳比较器：用于优先队列的排序
 // 小顶堆：时间戳小的元素优先级高（先出队）
+template<typename T>
 class CompareTimestamp
 {
 public:
-    bool operator()(const wordEntry &a, const wordEntry &b) const
+    bool operator()(const T &a, const T &b) const
     {
         return a.timeStamp > b.timeStamp; // 时间戳小的优先
     }
@@ -36,11 +37,12 @@ public:
  * - 允许延迟（Allowed Lateness）：系统能容忍的最大数据延迟
  * - 排序缓冲区（Ordered Buffer）：暂存乱序数据的优先队列
  */
+template<typename T>
 class LateDataHandler
 {
 private:
     // 排序缓冲区：按时间戳从小到大排序
-    priority_queue<wordEntry, vector<wordEntry>, CompareTimestamp> orderedBuffer;
+    priority_queue<T, vector<T>, CompareTimestamp<T>> orderedBuffer;
 
     // 当前水位线：表示已处理到的时间点
     long long watermark;
@@ -71,7 +73,7 @@ public:
                     ostream &out = cout)
         : allowedLateness(allowedLateness),
           maxBufferSize(maxBufferSize),
-          watermark(0),
+          watermark(-1000000),  // 初始化为很小的值，以便处理早期数据
           maxObservedTimestamp(0),
           totalProcessed(0),
           totalDropped(0),
@@ -88,7 +90,7 @@ public:
      * @param out 输出流
      * @return true 如果成功添加，false 如果被丢弃
      */
-    bool addData(const wordEntry &entry, ostream &out)
+    bool addData(const T &entry, ostream &out)
     {
         // 更新最大观察时间戳
         if (entry.timeStamp > maxObservedTimestamp)
@@ -128,6 +130,7 @@ public:
     void updateWatermark()
     {
         long long newWatermark = maxObservedTimestamp - allowedLateness;
+        // 允许水位线为负值（在数据刚开始流入时）
         if (newWatermark > watermark)
         {
             watermark = newWatermark;
@@ -139,9 +142,9 @@ public:
      * @param out 输出流
      * @return 按时间戳排序的数据向量
      */
-    vector<wordEntry> getProcessableData(ostream &out)
+    vector<T> getProcessableData(ostream &out)
     {
-        vector<wordEntry> result;
+        vector<T> result;
 
         // 从缓冲区中取出所有时间戳 <= watermark 的数据
         while (!orderedBuffer.empty() && 
@@ -165,8 +168,9 @@ public:
     /**
      * 强制清空缓冲区（用于缓冲区满或程序结束时）
      * @param out 输出流
+     * @return 返回缓冲区中的所有数据
      */
-    void forceFlush(ostream &out)
+    vector<T> forceFlush(ostream &out)
     {
         out << "[强制清空] 清空缓冲区，共 " << orderedBuffer.size() << " 条数据" << endl;
         
@@ -174,14 +178,16 @@ public:
         watermark = maxObservedTimestamp;
         
         // 取出所有数据
-        vector<wordEntry> all;
+        vector<T> all;
         while (!orderedBuffer.empty())
         {
             all.push_back(orderedBuffer.top());
             orderedBuffer.pop();
+            totalProcessed++;
         }
         
         totalBuffered = 0;
+        return all;
     }
 
     /**

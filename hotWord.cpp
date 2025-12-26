@@ -8,7 +8,6 @@
 #include <unordered_map> // 用于哈希表存储词频
 #include <queue>         // 用于滑动窗口实现
 #include <set>           // 用于存储停用词
-#include "lateDataHandler.cpp" // 迟到/乱序数据处理模块
 
 using namespace std;
 using namespace cppjieba;
@@ -23,6 +22,9 @@ public:
     wordEntry(const string &word, long long timeStamp)
         : word(word), timeStamp(timeStamp) {}
 };
+
+// 在定义 wordEntry 后包含迟到数据处理模块
+#include "lateDataHandler.cpp"
 
 // 热词提取类
 class wordCount
@@ -66,7 +68,7 @@ private:
     long long totalSentences = 0;
 
     // 迟到/乱序数据处理器
-    LateDataHandler *lateDataHandler;
+    LateDataHandler<wordEntry> *lateDataHandler;
     bool enableLateDataHandling; // 是否启用迟到数据处理
 
 public:
@@ -90,7 +92,7 @@ public:
         // 初始化迟到数据处理器
         if (enableLateDataHandling)
         {
-            lateDataHandler = new LateDataHandler(allowedLateness, 10000, out);
+            lateDataHandler = new LateDataHandler<wordEntry>(allowedLateness, 10000, out);
             out << "迟到/乱序数据处理功能已启用！" << endl;
         }
         else
@@ -283,6 +285,26 @@ public:
         {
             out << endl;
             lateDataHandler->printStatistics(out);
+        }
+    }
+
+    // 强制清空缓冲区（用于程序结束时）
+    void forceFlushBuffer(ostream &out)
+    {
+        if (enableLateDataHandling && lateDataHandler != nullptr)
+        {
+            // 强制清空缓冲区并获取所有数据
+            vector<wordEntry> remainingData = lateDataHandler->forceFlush(out);
+            
+            // 处理所有剩余数据
+            for (const auto &entry : remainingData)
+            {
+                Counter[entry.word]++;
+                window.push(entry);
+                totalWords++;
+            }
+            
+            out << "缓冲区已清空，处理了 " << remainingData.size() << " 条数据。" << endl;
         }
     }
 
