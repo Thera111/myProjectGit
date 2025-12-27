@@ -194,6 +194,14 @@ run_test "large" "$PERF_DIR/test_large.txt" "$PERF_DIR/output_large.txt"
 # Test 4: Large load with late data handling
 echo "   测试: large_with_late_handling"
 echo "   Test: large_with_late_handling"
+
+# Check if config.txt exists
+if [ ! -f config.txt ]; then
+    echo "      错误: config.txt 不存在"
+    echo "      Error: config.txt not found"
+    exit 1
+fi
+
 cp config.txt config.txt.bak
 sed -i 's/enableLateDataHandling=false/enableLateDataHandling=true/' config.txt
 $TIME_CMD -v ./hotword "$PERF_DIR/test_large.txt" "$PERF_DIR/output_large_late.txt" 2> "$PERF_DIR/large_late_metrics.txt" > /dev/null
