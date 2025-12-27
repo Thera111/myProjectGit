@@ -67,19 +67,6 @@ bool ReadUtf8Lines(const std::string &filename, std::vector<std::string> &lines)
     return true;
 }
 
-// 将 vector<string> 中的元素用指定分隔符拼接成一个字符串。
-// 用于展示分词结果，例如 "word1/word2/word3"。
-std::string Join(const std::vector<std::string> &items, const std::string &delim)
-{
-    std::ostringstream oss;
-    for (size_t i = 0; i < items.size(); ++i)
-    {
-        if (i)
-            oss << delim; // 添加分隔符
-        oss << items[i];
-    }
-    return oss.str();
-}
 
 int main(int argc, char *argv[])
 {
@@ -123,7 +110,7 @@ int main(int argc, char *argv[])
     // 只有在 enableLateDataHandling = true 时生效
     // 建议值：轻度乱序 10-30秒，严重乱序 30-60秒
     // 对于短时间测试数据，可以设置为较小值如 5-10 秒
-    long long allowedLateness = 5;  // 降低以便在短时间数据中看到实时处理效果
+    long long allowedLateness = 30;  // 降低以便在短时间数据中看到实时处理效果
     // ===============================
 
     // 初始化hotWord类
