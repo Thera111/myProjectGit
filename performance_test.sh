@@ -161,14 +161,19 @@ run_test() {
     echo "   Test: $test_name"
     
     # Measure time and memory
-    /usr/bin/time -v ./hotword "$input_file" "$output_file" 2> "$PERF_DIR/${test_name}_metrics.txt" > /dev/null
+    # Use /usr/bin/time for Linux, fallback to time command if not available
+    TIME_CMD="/usr/bin/time"
+    if [ ! -x "$TIME_CMD" ]; then
+        TIME_CMD="time"
+    fi
+    $TIME_CMD -v ./hotword "$input_file" "$output_file" 2> "$PERF_DIR/${test_name}_metrics.txt" > /dev/null
     
     # Extract metrics
     elapsed_time=$(grep "Elapsed (wall clock) time" "$PERF_DIR/${test_name}_metrics.txt" | awk '{print $8}')
     max_memory=$(grep "Maximum resident set size" "$PERF_DIR/${test_name}_metrics.txt" | awk '{print $6}')
     
-    # Get sentences count
-    sentence_count=$(grep -c "^\[" "$input_file" || echo "0")
+    # Get sentences count (exclude ACTION lines)
+    sentence_count=$(grep "^\[" "$input_file" | grep -v "ACTION" | wc -l || echo "0")
     
     echo "      完成时间: $elapsed_time"
     echo "      最大内存: ${max_memory} KB"
@@ -191,7 +196,7 @@ echo "   测试: large_with_late_handling"
 echo "   Test: large_with_late_handling"
 cp config.txt config.txt.bak
 sed -i 's/enableLateDataHandling=false/enableLateDataHandling=true/' config.txt
-/usr/bin/time -v ./hotword "$PERF_DIR/test_large.txt" "$PERF_DIR/output_large_late.txt" 2> "$PERF_DIR/large_late_metrics.txt" > /dev/null
+$TIME_CMD -v ./hotword "$PERF_DIR/test_large.txt" "$PERF_DIR/output_large_late.txt" 2> "$PERF_DIR/large_late_metrics.txt" > /dev/null
 elapsed_time=$(grep "Elapsed (wall clock) time" "$PERF_DIR/large_late_metrics.txt" | awk '{print $8}')
 max_memory=$(grep "Maximum resident set size" "$PERF_DIR/large_late_metrics.txt" | awk '{print $6}')
 echo "      完成时间: $elapsed_time"
@@ -211,14 +216,13 @@ Performance Test Summary
 ========================================
 
 测试配置:
-- 处理器: EOF
-cat "$PERF_DIR/performance_summary.txt"
+EOF
+
+echo -n "- 处理器: " >> "$PERF_DIR/performance_summary.txt"
 lscpu | grep "Model name" | awk -F: '{print $2}' | xargs >> "$PERF_DIR/performance_summary.txt"
-cat >> "$PERF_DIR/performance_summary.txt" << 'EOF'
-- 内存: EOF
+echo -n "- 内存: " >> "$PERF_DIR/performance_summary.txt"
 free -h | grep "Mem:" | awk '{print $2}' >> "$PERF_DIR/performance_summary.txt"
-cat >> "$PERF_DIR/performance_summary.txt" << 'EOF'
-- 操作系统: EOF
+echo -n "- 操作系统: " >> "$PERF_DIR/performance_summary.txt"
 uname -s >> "$PERF_DIR/performance_summary.txt"
 
 cat >> "$PERF_DIR/performance_summary.txt" << 'EOF'
