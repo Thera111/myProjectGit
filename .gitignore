@@ -6,3 +6,8 @@ demo
 # Temporary files
 *.o
 *.out
+
+# Test output files
+output_*.txt
+test_config_output.txt
+output_test.txt

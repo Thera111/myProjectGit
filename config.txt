@@ -1,0 +1,50 @@
+# 热词统计系统配置文件
+# Configuration file for Hot Word Statistics System
+# 
+# 说明：
+# - 以 # 开头的行为注释
+# - 每个配置项格式为：key=value
+# - 请勿在 = 号两边添加空格
+
+# ========== 输入输出配置 ==========
+# 输入文件路径
+inputFile=input1.txt
+
+# 输出文件路径
+outputFile=output.txt
+
+# ========== 迟到/乱序数据处理配置 ==========
+# 是否启用迟到数据处理功能 (true/false)
+# true: 启用乱序处理，适用于数据可能乱序到达的场景
+# false: 标准模式，假设数据按时间戳顺序到达
+enableLateDataHandling=true
+
+# 允许的最大延迟时间（秒）
+# 只有在 enableLateDataHandling=true 时生效
+# 建议值：轻度乱序 10-30秒，严重乱序 30-60秒
+allowedLateness=30
+
+# 缓冲区最大容量（条）
+# 用于控制内存使用，防止缓冲区无限增长
+maxBufferSize=10000
+
+# ========== 时间窗口配置 ==========
+# 时间窗口大小（秒）
+# 统计热词时只考虑此时间窗口内的数据
+windowSize=600
+
+# ========== 词典文件配置 ==========
+# jieba 分词主词典路径
+dictPath=dict/jieba.dict.utf8
+
+# HMM 模型文件路径
+modelPath=dict/hmm_model.utf8
+
+# 用户自定义词典路径
+userDictPath=dict/user.dict.utf8
+
+# IDF 词典路径（用于关键词提取）
+idfPath=dict/idf.utf8
+
+# 停用词文件路径
+stopWordPath=dict/stop_words.utf8
