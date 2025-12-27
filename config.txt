@@ -7,7 +7,7 @@ inputFile=input1.txt
 outputFile=output.txt
 
 # ========== 迟到/乱序数据处理配置 ==========
-enableLateDataHandling=true
+enableLateDataHandling=false
 
 # 允许的最大延迟时间（秒）
 allowedLateness=30

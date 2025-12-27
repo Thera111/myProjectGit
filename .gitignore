@@ -6,11 +6,3 @@ demo
 # Temporary files
 *.o
 *.out
-
-# Test output files
-output_*.txt
-test_config_output.txt
-test_output*.txt
-
-# Config backups
-config_*.txt
