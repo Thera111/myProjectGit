@@ -1,0 +1,21 @@
+# 热词统计系统配置文件 - 测试配置
+# Configuration file for Hot Word Statistics System - Test Config
+
+# ========== 输入输出配置 ==========
+inputFile=test_late_data.txt
+outputFile=output_test.txt
+
+# ========== 迟到/乱序数据处理配置 ==========
+enableLateDataHandling=false
+allowedLateness=60
+maxBufferSize=5000
+
+# ========== 时间窗口配置 ==========
+windowSize=300
+
+# ========== 词典文件配置 ==========
+dictPath=dict/jieba.dict.utf8
+modelPath=dict/hmm_model.utf8
+userDictPath=dict/user.dict.utf8
+idfPath=dict/idf.utf8
+stopWordPath=dict/stop_words.utf8

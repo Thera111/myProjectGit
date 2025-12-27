@@ -38,10 +38,47 @@
 #include <string>
 #include <vector>
 #include <cstdlib>
+#include <map>
 
 #include "hotWord.cpp"
 
 using namespace std;
+
+// 从配置文件中读取配置项
+bool ReadConfig(const std::string &configFile, std::map<std::string, std::string> &config)
+{
+    std::ifstream ifs(configFile);
+    if (!ifs.is_open())
+    {
+        return false;
+    }
+    
+    std::string line;
+    while (std::getline(ifs, line))
+    {
+        // 去掉 Windows 换行符中的 \r
+        if (!line.empty() && line.back() == '\r')
+        {
+            line.pop_back();
+        }
+        
+        // 跳过空行和注释行
+        if (line.empty() || line[0] == '#')
+        {
+            continue;
+        }
+        
+        // 解析 key=value 格式
+        size_t pos = line.find('=');
+        if (pos != std::string::npos)
+        {
+            std::string key = line.substr(0, pos);
+            std::string value = line.substr(pos + 1);
+            config[key] = value;
+        }
+    }
+    return true;
+}
 
 // 从文件中读取 UTF-8 编码的每一行，并存储到 vector 中。
 bool ReadUtf8Lines(const std::string &filename, std::vector<std::string> &lines)
@@ -70,13 +107,28 @@ bool ReadUtf8Lines(const std::string &filename, std::vector<std::string> &lines)
 
 int main(int argc, char *argv[])
 {
-    // 默认输入和输出文件路径
-    std::string inputFile = "input1.txt";  // 默认输入文件
-    std::string outputFile = "output.txt"; // 默认输出文件
+    // 读取配置文件
+    std::string configFile = "config.txt";
+    std::map<std::string, std::string> config;
+    
+    if (!ReadConfig(configFile, config))
+    {
+        std::cerr << "[WARN ] 无法读取配置文件 '" << configFile << "'，将使用默认配置和命令行参数" << std::endl;
+    }
+    else
+    {
+        std::cout << "[INFO ] 成功读取配置文件: " << configFile << std::endl;
+    }
+    
+    // 从配置文件或命令行参数获取输入输出文件路径
+    std::string inputFile = config.count("inputFile") ? config["inputFile"] : "input1.txt";
+    std::string outputFile = config.count("outputFile") ? config["outputFile"] : "output.txt";
+    
+    // 命令行参数优先级高于配置文件
     if (argc >= 2)
-        inputFile = argv[1]; // 如果提供参数，更新输入文件路径
+        inputFile = argv[1];
     if (argc >= 3)
-        outputFile = argv[2]; // 如果提供参数，更新输出文件路径
+        outputFile = argv[2];
 
     // 打开输出文件
     std::ofstream outFile(outputFile);
@@ -101,26 +153,58 @@ int main(int argc, char *argv[])
     }
 
     // ========== 配置参数 ==========
+    // 从配置文件读取参数，如果配置文件中没有则使用默认值
+    
     // 是否启用迟到/乱序数据处理功能
-    // true: 启用乱序处理，适用于数据可能乱序到达的场景
-    // false: 标准模式，假设数据按时间戳顺序到达
-    bool enableLateDataHandling = true;  // 启用以测试乱序处理功能
+    bool enableLateDataHandling = true;  // 默认值
+    if (config.count("enableLateDataHandling"))
+    {
+        enableLateDataHandling = (config["enableLateDataHandling"] == "true");
+    }
     
     // 允许的最大延迟时间（秒）
-    // 只有在 enableLateDataHandling = true 时生效
-    // 建议值：轻度乱序 10-30秒，严重乱序 30-60秒
-    // 对于短时间测试数据，可以设置为较小值如 5-10 秒
-    long long allowedLateness = 30;  // 降低以便在短时间数据中看到实时处理效果
+    long long allowedLateness = 30;  // 默认值
+    if (config.count("allowedLateness"))
+    {
+        allowedLateness = std::stoll(config["allowedLateness"]);
+    }
+    
+    // 时间窗口大小（秒）
+    long long windowSize = 600;  // 默认值
+    if (config.count("windowSize"))
+    {
+        windowSize = std::stoll(config["windowSize"]);
+    }
+    
+    // 词典文件路径
+    std::string dictPath = config.count("dictPath") ? config["dictPath"] : "dict/jieba.dict.utf8";
+    std::string modelPath = config.count("modelPath") ? config["modelPath"] : "dict/hmm_model.utf8";
+    std::string userDictPath = config.count("userDictPath") ? config["userDictPath"] : "dict/user.dict.utf8";
+    std::string idfPath = config.count("idfPath") ? config["idfPath"] : "dict/idf.utf8";
+    std::string stopWordPath = config.count("stopWordPath") ? config["stopWordPath"] : "dict/stop_words.utf8";
+    
+    // 输出配置信息
+    outFile << "========== 配置信息 ==========" << endl;
+    outFile << "配置文件: " << configFile << endl;
+    outFile << "输入文件: " << inputFile << endl;
+    outFile << "输出文件: " << outputFile << endl;
+    outFile << "时间窗口大小: " << windowSize << " 秒" << endl;
+    outFile << "启用迟到数据处理: " << (enableLateDataHandling ? "是" : "否") << endl;
+    if (enableLateDataHandling)
+    {
+        outFile << "允许最大延迟: " << allowedLateness << " 秒" << endl;
+    }
+    outFile << "================================" << endl << endl;
     // ===============================
 
     // 初始化hotWord类
     hotWord hw(
-        "dict/jieba.dict.utf8",
-        "dict/hmm_model.utf8",
-        "dict/user.dict.utf8",
-        "dict/idf.utf8",
-        "dict/stop_words.utf8",
-        600,                        // 时间窗口大小
+        dictPath,
+        modelPath,
+        userDictPath,
+        idfPath,
+        stopWordPath,
+        windowSize,
         outFile,
         enableLateDataHandling,     // 是否启用迟到数据处理
         allowedLateness             // 允许的最大延迟
