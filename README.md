@@ -73,8 +73,8 @@ make run-with INPUT=input2.txt OUTPUT=output2.txt
 | `make debug` | 编译 debug 版本（包含调试符号） |
 | `make run` | 编译并运行程序（使用默认配置） |
 | `make run-with INPUT=<file> OUTPUT=<file>` | 编译并运行，指定输入输出文件 |
-| `make clean` | 清理编译产物和输出文件 |
-| `make clean-all` | 清理所有生成文件 |
+| `make clean` | 清理编译产物（不删除输出文件） |
+| `make clean-all` | 清理所有生成文件（包括 output*.txt） |
 | `make install` | 安装到系统路径（需要 sudo） |
 | `make uninstall` | 从系统路径卸载 |
 | `make help` | 显示帮助信息 |
