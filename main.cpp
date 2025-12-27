@@ -113,6 +113,19 @@ int main(int argc, char *argv[])
         std::cerr << "[WARN ] 输入文件为空。" << std::endl;
     }
 
+    // ========== 配置参数 ==========
+    // 是否启用迟到/乱序数据处理功能
+    // true: 启用乱序处理，适用于数据可能乱序到达的场景
+    // false: 标准模式，假设数据按时间戳顺序到达
+    bool enableLateDataHandling = true;  // 启用以测试乱序处理功能
+    
+    // 允许的最大延迟时间（秒）
+    // 只有在 enableLateDataHandling = true 时生效
+    // 建议值：轻度乱序 10-30秒，严重乱序 30-60秒
+    // 对于短时间测试数据，可以设置为较小值如 5-10 秒
+    long long allowedLateness = 5;  // 降低以便在短时间数据中看到实时处理效果
+    // ===============================
+
     // 初始化hotWord类
     hotWord hw(
         "dict/jieba.dict.utf8",
@@ -120,8 +133,10 @@ int main(int argc, char *argv[])
         "dict/user.dict.utf8",
         "dict/idf.utf8",
         "dict/stop_words.utf8",
-        600, // 时间窗口大小
-        outFile
+        600,                        // 时间窗口大小
+        outFile,
+        enableLateDataHandling,     // 是否启用迟到数据处理
+        allowedLateness             // 允许的最大延迟
     );
 
     // 处理每个句子
@@ -149,6 +164,15 @@ int main(int argc, char *argv[])
     // 输出统计信息
     outFile << "================ 统计信息 ================" << endl;
     hw.printStats(outFile);
+
+    // 如果启用了迟到数据处理，在程序结束前强制清空缓冲区
+    if (enableLateDataHandling)
+    {
+        outFile << endl << "================ 程序结束，强制处理缓冲区数据 ================" << endl;
+        hw.forceFlushBuffer(outFile);
+        outFile << endl << "================ 最终统计信息 ================" << endl;
+        hw.printStats(outFile);
+    }
 
     outFile.close();
     return 0;
