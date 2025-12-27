@@ -10,4 +10,7 @@ demo
 # Test output files
 output_*.txt
 test_config_output.txt
-output_test.txt
+test_output*.txt
+
+# Config backups
+config_*.txt
