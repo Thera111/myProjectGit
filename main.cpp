@@ -108,7 +108,7 @@ bool ReadUtf8Lines(const std::string &filename, std::vector<std::string> &lines)
 int main(int argc, char *argv[])
 {
     // 读取配置文件
-    std::string configFile = "config.txt";
+    std::string configFile = "config_test.txt";
     std::map<std::string, std::string> config;
     
     if (!ReadConfig(configFile, config))
@@ -164,17 +164,11 @@ int main(int argc, char *argv[])
     
     // 允许的最大延迟时间（秒）
     long long allowedLateness = 30;  // 默认值
-    if (config.count("allowedLateness"))
-    {
-        allowedLateness = std::stoll(config["allowedLateness"]);
-    }
+    allowedLateness = config.count("allowedLateness") ? std::stoll(config["allowedLateness"]) : 30;
     
     // 时间窗口大小（秒）
     long long windowSize = 600;  // 默认值
-    if (config.count("windowSize"))
-    {
-        windowSize = std::stoll(config["windowSize"]);
-    }
+    windowSize = config.count("windowSize") ? std::stoll(config["windowSize"]) : 600;
     
     // 词典文件路径
     std::string dictPath = config.count("dictPath") ? config["dictPath"] : "dict/jieba.dict.utf8";
