@@ -7,23 +7,3 @@ hotword
 output*.txt
 *.txt.bak
 
-# 性能测试结果（保留测试数据和脚本，但不提交具体结果）
-performance_tests/output_*.txt
-performance_tests/*_metrics.txt
-performance_tests/performance_summary.txt
-
-# IDE配置
-.vscode/
-.idea/
-
-# 临时文件
-*.tmp
-*.swp
-*~
-
-# macOS
-.DS_Store
-
-# Windows
-Thumbs.db
-desktop.ini
