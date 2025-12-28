@@ -7,3 +7,11 @@ hotword
 output*.txt
 *.txt.bak
 
+# 性能测试生成文件（但保留目录结构）
+performance_tests/data/*.txt
+performance_tests/results/*
+performance_tests/logs/*
+!performance_tests/data/.gitkeep
+!performance_tests/results/.gitkeep
+!performance_tests/logs/.gitkeep
+
